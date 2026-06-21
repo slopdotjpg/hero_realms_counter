@@ -565,6 +565,32 @@
   let players = [];
   let focusedIdx = 0;
 
+  // ── Persistence ──
+  const STORAGE_KEY = 'hero_realms_state';
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ playerCount, players, focusedIdx }));
+    } catch (_) {}
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      const s = JSON.parse(raw);
+      if (!s.players?.length) return false;
+      playerCount = s.playerCount || 2;
+      players     = s.players;
+      focusedIdx  = s.focusedIdx || 0;
+      selectCount(playerCount);
+      document.getElementById('setup').style.display = 'none';
+      document.getElementById('game').style.display  = 'block';
+      renderGame();
+      return true;
+    } catch (_) { return false; }
+  }
+
   // ── Setup ──
   const countBtns = document.querySelectorAll('.count-btn');
   const playerNamesDiv = document.getElementById('player-names');
@@ -629,7 +655,7 @@
   });
 
   countBtns.forEach(b => b.addEventListener('click', () => selectCount(+b.dataset.n)));
-  selectCount(2);
+  if (!loadState()) selectCount(2);
 
   document.getElementById('start-btn').addEventListener('click', () => {
     const blocks = playerNamesDiv.querySelectorAll('.player-block');
@@ -654,12 +680,13 @@
     document.getElementById('setup').style.display = 'none';
     document.getElementById('game').style.display = 'block';
     renderGame();
+    saveState();
   });
 
   document.getElementById('reset-btn').addEventListener('click', () => {
+    localStorage.removeItem(STORAGE_KEY);
     document.getElementById('game').style.display = 'none';
     document.getElementById('setup').style.display = 'block';
-    // Re-render setup to restore class selections
     renderNameInputs(playerCount);
   });
 
@@ -803,6 +830,7 @@
   function addPending(idx, delta) {
     players[idx].pending += delta;
     refreshCard(idx);
+    saveState();
   }
 
   function validate(idx) {
@@ -821,11 +849,13 @@
       p.prev = null;
     }
     refreshCard(idx);
+    saveState();
   }
 
   function cancelPending(idx) {
     players[idx].pending = 0;
     refreshCard(idx);
+    saveState();
   }
 
   function undo(idx) {
@@ -835,6 +865,7 @@
     p.history = p.prev.history;
     p.prev = null;
     refreshCard(idx);
+    saveState();
   }
 
   function refreshCard(idx) {
