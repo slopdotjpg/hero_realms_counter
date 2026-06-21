@@ -1,5 +1,7 @@
 # Hero Realms Health Counter
 
+**[https://slopdotjpg.github.io/hero_realms_counter/](https://slopdotjpg.github.io/hero_realms_counter/)**
+
 A single-file static web app for tracking player health during [Hero Realms](https://www.herorealms.com/) games. No server, no dependencies, no install — just open `index.html` in a browser.
 
 ## Features

@@ -701,10 +701,8 @@
     const w = window.innerWidth;
 
     let cols;
-    if (w < 480) {
+    if (w < 768) {
       cols = Math.min(n, 2);
-    } else if (w < 768) {
-      cols = n <= 2 ? 2 : Math.min(n, 3);
     } else {
       cols = n <= 4 ? n : n <= 6 ? 3 : n;
     }
