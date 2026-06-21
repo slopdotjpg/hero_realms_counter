@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hero Realms Health Counter</title>
+  <style>
+    /* Cinzel — SIL Open Font License 1.1 (see fonts/OFL.txt) */
+    @font-face {
+      font-family: 'Cinzel';
+      font-style: normal;
+      font-weight: 400 900;
+      font-display: swap;
+      src: url('fonts/Cinzel-latin-ext.woff2') format('woff2');
+      unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+    }
+    @font-face {
+      font-family: 'Cinzel';
+      font-style: normal;
+      font-weight: 400 900;
+      font-display: swap;
+      src: url('fonts/Cinzel-latin.woff2') format('woff2');
+      unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    }
+  </style>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #120a04;
+      --surface: #1e1008;
+      --card: #2a1505;
+      --accent: #c8202f;
+      --accent2: #7ec86a;
+      --gold: #d4a847;
+      --text: #e8d5b0;
+      --muted: #8a7355;
+      --radius: 14px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-family: 'Cinzel', 'Georgia', serif;
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-align: center;
+      padding: 1.4rem 1rem .7rem;
+      color: var(--gold);
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(212, 168, 71, .3);
+      width: 100%;
+      max-width: 960px;
+      margin-bottom: .5rem;
+    }
+
+    /* ── SETUP ── */
+    #setup { width: 100%; max-width: 520px; padding: 1rem 1.2rem 2rem; }
+
+    .setup-group { margin-bottom: 1.2rem; }
+
+    .setup-group label {
+      display: block;
+      font-size: .75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: .45rem;
+    }
+
+    .setup-group input[type="number"],
+    .setup-group input[type="text"] {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid rgba(212, 168, 71, .2);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+      padding: .6rem .9rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .setup-group input:focus { border-color: var(--gold); }
+
+    .count-row { display: flex; gap: .5rem; }
+
+    .count-btn {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid rgba(212, 168, 71, .2);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 1rem;
+      padding: .55rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+
+    .count-btn.active,
+    .count-btn:hover { background: var(--gold); border-color: var(--gold); color: #1a0a00; font-weight: 700; }
+
+    /* ── PLAYER SETUP BLOCKS ── */
+    #player-names { display: flex; flex-direction: column; gap: 1rem; }
+
+    .player-block {
+      background: var(--surface);
+      border: 1px solid rgba(212, 168, 71, .15);
+      border-radius: 10px;
+      padding: .7rem .8rem .8rem;
+      display: flex;
+      flex-direction: column;
+      gap: .55rem;
+    }
+
+    .player-name-row { display: flex; align-items: center; gap: .6rem; }
+
+    .player-name-row span {
+      font-size: .8rem;
+      color: var(--muted);
+      width: 4.5rem;
+      flex-shrink: 0;
+    }
+
+    .player-name-row input[type="text"]   { flex: 1; width: auto; background: var(--card); border: 1px solid rgba(212,168,71,.2); border-radius: 7px; color: var(--text); font-size: .95rem; padding: .45rem .7rem; outline: none; transition: border-color .2s; }
+    .player-name-row input[type="text"]:focus { border-color: var(--gold); }
+    .player-name-row input[type="number"] { width: 5rem; flex-shrink: 0; text-align: center; background: var(--card); border: 1px solid rgba(212,168,71,.2); border-radius: 7px; color: var(--text); font-size: .95rem; padding: .45rem .5rem; outline: none; transition: border-color .2s; }
+    .player-name-row input[type="number"]:focus { border-color: var(--gold); }
+
+    /* class selector */
+    .class-row {
+      display: flex;
+      gap: .4rem;
+    }
+
+    .class-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .18rem;
+      padding: .4rem .2rem;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: var(--card);
+      cursor: pointer;
+      transition: all .15s;
+      line-height: 1;
+    }
+
+    .class-btn .cls-icon { font-size: 1.1rem; }
+    .class-btn .cls-name { font-size: .58rem; font-family: 'Cinzel', serif; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); transition: color .15s; }
+
+    /* per-class idle border tint */
+    .class-btn[data-cls="Cleric"]  { border-color: rgba(212, 168,  32, .3); }
+    .class-btn[data-cls="Fighter"] { border-color: rgba(200,  48,  48, .3); }
+    .class-btn[data-cls="Ranger"]  { border-color: rgba( 58, 138,  58, .3); }
+    .class-btn[data-cls="Thief"]   { border-color: rgba(138,  74, 184, .3); }
+    .class-btn[data-cls="Wizard"]  { border-color: rgba( 42, 106, 184, .3); }
+
+    /* per-class active fill */
+    .class-btn[data-cls="Cleric"].active  { background: #4a3800; border-color: #d4a820; }
+    .class-btn[data-cls="Fighter"].active { background: #3d0c0c; border-color: #c83030; }
+    .class-btn[data-cls="Ranger"].active  { background: #0c2e0c; border-color: #3a8a3a; }
+    .class-btn[data-cls="Thief"].active   { background: #250d3a; border-color: #8a4ab8; }
+    .class-btn[data-cls="Wizard"].active  { background: #0c1e3d; border-color: #2a6ab8; }
+
+    .class-btn[data-cls="Cleric"].active  .cls-name { color: #d4a820; }
+    .class-btn[data-cls="Fighter"].active .cls-name { color: #e07070; }
+    .class-btn[data-cls="Ranger"].active  .cls-name { color: #5ab85a; }
+    .class-btn[data-cls="Thief"].active   .cls-name { color: #b07ad8; }
+    .class-btn[data-cls="Wizard"].active  .cls-name { color: #6aaae0; }
+
+    .class-btn:hover:not(.active) { border-color: rgba(212, 168, 71, .5); }
+
+    #start-btn {
+      width: 100%;
+      background: var(--gold);
+      border: none;
+      border-radius: var(--radius);
+      color: #1a0a00;
+      font-family: 'Cinzel', 'Georgia', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      padding: .85rem;
+      cursor: pointer;
+      margin-top: 1.4rem;
+      text-transform: uppercase;
+      transition: opacity .15s;
+    }
+
+    #start-btn:hover { opacity: .88; }
+
+    /* ── GAME ── */
+    #game { display: none; width: 100%; max-width: 960px; padding: .6rem .8rem 1.5rem; }
+
+    .game-header { display: flex; justify-content: flex-end; margin-bottom: .8rem; }
+
+    #reset-btn {
+      background: transparent;
+      border: 1px solid var(--muted);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: .8rem;
+      padding: .4rem .9rem;
+      cursor: pointer;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      transition: all .15s;
+    }
+
+    #reset-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    #players-grid {
+      display: grid;
+      gap: .9rem;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    /* 4-player compact mode — buttons and font shrink so all cards fit in one row */
+    #players-grid.compact .player-card { padding: .7rem .6rem .9rem; gap: .4rem; }
+    #players-grid.compact .health-value { font-size: 3.6rem; }
+    #players-grid.compact .player-name  { font-size: .85rem; }
+    #players-grid.compact .ctrl-row     { gap: .25rem; }
+    #players-grid.compact .btn-big      { width: 2.7rem; height: 2.7rem; font-size: 1.25rem; }
+    #players-grid.compact .btn-small    { width: 1.9rem; height: 1.9rem; font-size: .85rem; }
+
+    /* ── PLAYER CARD ── */
+    .player-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 2px solid rgba(212, 168, 71, .2);
+      box-shadow: inset 0 1px 0 rgba(212, 168, 71, .08), 0 4px 16px rgba(0,0,0,.5);
+      padding: 1rem 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .55rem;
+      transition: border-color .2s, box-shadow .2s;
+      position: relative;
+    }
+
+    .player-card.focused {
+      border-color: var(--gold);
+      box-shadow: inset 0 1px 0 rgba(212, 168, 71, .15), 0 0 18px rgba(212, 168, 71, .18);
+    }
+
+    .player-card.dead { border-color: var(--accent) !important; opacity: .65; }
+
+    .player-card.dead::after {
+      content: '☠ DEFEATED';
+      position: absolute;
+      top: .5rem;
+      right: .7rem;
+      font-family: 'Cinzel', 'Georgia', serif;
+      font-size: .6rem;
+      letter-spacing: .12em;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .focus-badge {
+      position: absolute;
+      top: .45rem;
+      left: .7rem;
+      font-size: .6rem;
+      color: var(--gold);
+      opacity: .8;
+    }
+
+    .player-name {
+      font-family: 'Cinzel', 'Georgia', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-align: center;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    /* class badge on game card */
+    .player-class-badge {
+      font-family: 'Cinzel', 'Georgia', serif;
+      font-size: .62rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-top: -.3rem;
+    }
+
+    .health-value {
+      font-size: 4.5rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--gold);
+      transition: color .3s;
+      min-width: 4.5rem;
+      text-align: center;
+    }
+
+    .health-value.low      { color: #e07b24; }
+    .health-value.critical { color: var(--accent); }
+
+    /* ── CONTROLS ── */
+    .ctrl-row { display: flex; align-items: center; gap: .4rem; }
+
+    .ctrl-btn {
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .08s, opacity .15s;
+      user-select: none;
+    }
+
+    .ctrl-btn:active { transform: scale(.92); }
+
+    .btn-big   { width: 3.2rem; height: 3.2rem; font-size: 1.5rem; background: var(--surface); color: var(--text); }
+    .btn-small { width: 2.3rem; height: 2.3rem; font-size: 1rem;   background: var(--surface); color: var(--text); }
+
+    .btn-big.minus,   .btn-small.minus { background: #3a1010; color: #e07070; }
+    .btn-big.plus,    .btn-small.plus  { background: #0f2d18; color: var(--accent2); }
+
+    .custom-row { display: flex; align-items: center; gap: .5rem; }
+
+    .custom-input {
+      width: 3.8rem;
+      background: var(--surface);
+      border: 1px solid rgba(212, 168, 71, .2);
+      border-radius: 7px;
+      color: var(--text);
+      font-size: .9rem;
+      padding: .3rem .5rem;
+      text-align: center;
+      outline: none;
+    }
+
+    .custom-input:focus { border-color: var(--gold); }
+
+    .apply-minus, .apply-plus {
+      font-size: .75rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 7px;
+      padding: .35rem .65rem;
+      cursor: pointer;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      transition: opacity .15s;
+    }
+
+    .apply-minus { background: #3a1010; color: #e07070; }
+    .apply-plus  { background: #0f2d18; color: var(--accent2); }
+    .apply-minus:hover, .apply-plus:hover { opacity: .8; }
+
+    /* ── PENDING (below controls) ── */
+    .pending-row {
+      display: flex;
+      align-items: center;
+      gap: .45rem;
+      font-size: .9rem;
+      font-weight: 700;
+    }
+
+    .pending-label  { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; }
+    .pending-delta  { font-size: 1rem; }
+    .pending-delta.negative { color: #e07070; }
+    .pending-delta.positive { color: var(--accent2); }
+    .pending-arrow  { color: var(--muted); font-size: .75rem; }
+    .pending-proj   { color: var(--gold); font-size: 1rem; }
+
+    .action-row { display: flex; gap: .5rem; width: 100%; }
+
+    .validate-btn {
+      flex: 1;
+      background: #0f2d18;
+      color: var(--accent2);
+      border: 1px solid var(--accent2);
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: .82rem;
+      padding: .5rem;
+      cursor: pointer;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      transition: opacity .15s;
+    }
+
+    .cancel-pending-btn {
+      flex: 1;
+      background: #2a0c0c;
+      color: #e07070;
+      border: 1px solid #e07070;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: .82rem;
+      padding: .5rem;
+      cursor: pointer;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      transition: opacity .15s;
+    }
+
+    .validate-btn:hover, .cancel-pending-btn:hover { opacity: .8; }
+
+    .undo-btn {
+      background: transparent;
+      border: 1px solid rgba(212, 168, 71, .35);
+      border-radius: 7px;
+      color: var(--gold);
+      font-size: .75rem;
+      padding: .3rem .8rem;
+      cursor: pointer;
+      letter-spacing: .04em;
+      opacity: .85;
+      transition: opacity .15s, border-color .15s;
+    }
+
+    .undo-btn:hover { opacity: 1; border-color: var(--gold); }
+
+    /* ── HISTORY ── */
+    .history {
+      width: 100%;
+      max-height: 5rem;
+      overflow-y: auto;
+      font-size: .72rem;
+      color: var(--muted);
+      border-top: 1px solid rgba(212, 168, 71, .12);
+      padding-top: .45rem;
+      margin-top: .1rem;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .history::-webkit-scrollbar { width: 4px; }
+    .history::-webkit-scrollbar-thumb { background: rgba(212, 168, 71, .2); border-radius: 4px; }
+
+    .hist-entry.damage { color: #e07070; }
+    .hist-entry.heal   { color: var(--accent2); }
+
+    /* ── SHORTCUTS LEGEND ── */
+    .shortcuts-hint {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: .8rem 1.4rem;
+      font-size: .68rem;
+      color: var(--muted);
+      margin-top: .9rem;
+      padding: 0 1rem;
+      opacity: .75;
+    }
+
+    .shortcuts-hint span::before { content: '⌨ '; }
+
+    /* ── MOBILE / TOUCH ── */
+    button {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* prevent iOS from zooming into focused inputs */
+    input { font-size: max(1rem, 16px); }
+
+    @media (max-width: 767px) {
+      h1 { font-size: 1.4rem; padding: .9rem .8rem .5rem; }
+
+      #game { padding: .4rem .5rem 1.2rem; }
+      #players-grid { gap: .6rem; }
+
+      .count-btn { padding: .7rem; }
+
+      /* ensure class picker buttons are easy to tap */
+      .class-btn { min-height: 44px; }
+
+      .btn-big   { width: 2.8rem !important; height: 2.8rem !important; font-size: 1.35rem !important; }
+      .btn-small { width: 2.2rem !important; height: 2.2rem !important; font-size: .95rem !important;  }
+
+      .validate-btn, .cancel-pending-btn { padding: .6rem .3rem; }
+      .undo-btn { padding: .4rem .7rem; }
+
+      /* keyboard shortcuts don't apply on touch devices */
+      .shortcuts-hint { display: none; }
+    }
+
+    @media (max-width: 479px) {
+      .player-card { padding: .65rem .5rem .75rem; }
+
+      .btn-big   { width: 2.35rem !important; height: 2.35rem !important; font-size: 1.15rem !important; }
+      .btn-small { width: 1.8rem !important;  height: 1.8rem !important;  font-size: .82rem !important;  }
+
+      .health-value { font-size: 3.4rem !important; min-width: 3.4rem; }
+      .player-name  { font-size: .85rem; }
+
+      .ctrl-row { gap: .2rem !important; }
+
+      .custom-input { width: 3rem; }
+      .apply-minus, .apply-plus { padding: .35rem .5rem; font-size: .7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Hero Realms</h1>
+
+<!-- ── SETUP ── -->
+<div id="setup">
+  <div class="setup-group">
+    <label>Number of players</label>
+    <div class="count-row" id="count-row">
+      <button class="count-btn" data-n="2">2</button>
+      <button class="count-btn" data-n="3">3</button>
+      <button class="count-btn" data-n="4">4</button>
+      <button class="count-btn" data-n="5">5</button>
+      <button class="count-btn" data-n="6">6</button>
+    </div>
+  </div>
+  <div class="setup-group">
+    <label>Default starting health (used when no class is selected)</label>
+    <input type="number" id="start-health" value="50" min="1" max="999" />
+  </div>
+  <div class="setup-group">
+    <label>Players</label>
+    <div id="player-names"></div>
+  </div>
+  <button id="start-btn">Begin the Battle</button>
+</div>
+
+<!-- ── GAME ── -->
+<div id="game">
+  <div class="game-header">
+    <button id="reset-btn">New Game</button>
+  </div>
+  <div id="players-grid"></div>
+  <div class="shortcuts-hint">
+    <span>Tab: change player</span>
+    <span>↑ / ↓: ±1</span>
+    <span>⇧↑ / ⇧↓: ±5</span>
+    <span>Enter: validate</span>
+    <span>Esc: cancel</span>
+  </div>
+</div>
+
+<script>
+  const CLASSES = [
+    { name: 'Cleric',  hp: 55, icon: '✝',  color: '#d4a820' },
+    { name: 'Fighter', hp: 60, icon: '⚔',  color: '#c83030' },
+    { name: 'Ranger',  hp: 58, icon: '🏹', color: '#3a8a3a' },
+    { name: 'Thief',   hp: 52, icon: '🗡', color: '#8a4ab8' },
+    { name: 'Wizard',  hp: 50, icon: '✦',  color: '#2a6ab8' },
+  ];
+
+  let playerCount = 2;
+  let players = [];
+  let focusedIdx = 0;
+
+  // ── Setup ──
+  const countBtns = document.querySelectorAll('.count-btn');
+  const playerNamesDiv = document.getElementById('player-names');
+  const defaultHpInput = document.getElementById('start-health');
+
+  function selectCount(n) {
+    playerCount = n;
+    countBtns.forEach(b => b.classList.toggle('active', +b.dataset.n === n));
+    renderNameInputs(n);
+  }
+
+  function renderNameInputs(n) {
+    const defaultHp = Math.max(1, +defaultHpInput.value || 50);
+    playerNamesDiv.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      const block = document.createElement('div');
+      block.className = 'player-block';
+
+      const classBtnsHtml = CLASSES.map(c => `
+        <button class="class-btn" data-cls="${c.name}" data-hp="${c.hp}" type="button">
+          <span class="cls-icon">${c.icon}</span>
+          <span class="cls-name">${c.name}</span>
+        </button>
+      `).join('');
+
+      block.innerHTML = `
+        <div class="player-name-row">
+          <span>Player ${i + 1}</span>
+          <input type="text" placeholder="Name" value="${players[i]?.name || ''}" />
+          <input type="number" class="per-player-hp" value="${players[i]?.maxHp || defaultHp}" min="1" max="999" title="Starting health" />
+        </div>
+        <div class="class-row">${classBtnsHtml}</div>
+      `;
+
+      // Class button click: set HP + active state
+      block.querySelectorAll('.class-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          block.querySelectorAll('.class-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          block.querySelector('.per-player-hp').value = btn.dataset.hp;
+        });
+      });
+
+      // Restore previously selected class (if coming back from game)
+      const prevCls = players[i]?.cls;
+      if (prevCls) {
+        const prevBtn = block.querySelector(`.class-btn[data-cls="${prevCls}"]`);
+        prevBtn?.classList.add('active');
+      }
+
+      playerNamesDiv.appendChild(block);
+    }
+  }
+
+  defaultHpInput.addEventListener('input', () => {
+    const val = Math.max(1, +defaultHpInput.value || 50);
+    // Only update HP inputs that have no class selected
+    playerNamesDiv.querySelectorAll('.player-block').forEach(block => {
+      const hasClass = block.querySelector('.class-btn.active');
+      if (!hasClass) block.querySelector('.per-player-hp').value = val;
+    });
+  });
+
+  countBtns.forEach(b => b.addEventListener('click', () => selectCount(+b.dataset.n)));
+  selectCount(2);
+
+  document.getElementById('start-btn').addEventListener('click', () => {
+    const blocks = playerNamesDiv.querySelectorAll('.player-block');
+    players = Array.from(blocks).map((block, i) => {
+      const nameInp   = block.querySelector('input[type="text"]');
+      const hpInp     = block.querySelector('.per-player-hp');
+      const activeBtn = block.querySelector('.class-btn.active');
+      const hp = Math.max(1, +hpInp.value || 50);
+      return {
+        name: nameInp.value.trim() || `Player ${i + 1}`,
+        hp,
+        maxHp: hp,
+        cls: activeBtn?.dataset.cls || null,
+        clsColor: activeBtn ? CLASSES.find(c => c.name === activeBtn.dataset.cls)?.color : null,
+        clsIcon:  activeBtn ? CLASSES.find(c => c.name === activeBtn.dataset.cls)?.icon  : null,
+        history: [],
+        prev: null,
+        pending: 0,
+      };
+    });
+    focusedIdx = 0;
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('game').style.display = 'block';
+    renderGame();
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    document.getElementById('game').style.display = 'none';
+    document.getElementById('setup').style.display = 'block';
+    // Re-render setup to restore class selections
+    renderNameInputs(playerCount);
+  });
+
+  // ── Keyboard shortcuts ──
+  document.addEventListener('keydown', e => {
+    if (document.getElementById('game').style.display === 'none') return;
+    if (e.target.tagName === 'INPUT' && e.key !== 'Tab' && e.key !== 'Escape') return;
+
+    switch (e.key) {
+      case 'Tab':     e.preventDefault(); moveFocus(e.shiftKey ? -1 : 1); break;
+      case 'ArrowUp': e.preventDefault(); addPending(focusedIdx, e.shiftKey ? 5 : 1); break;
+      case 'ArrowDown': e.preventDefault(); addPending(focusedIdx, e.shiftKey ? -5 : -1); break;
+      case 'Enter':   e.preventDefault(); validate(focusedIdx); break;
+      case 'Escape':  e.preventDefault(); cancelPending(focusedIdx); break;
+    }
+  });
+
+  function moveFocus(dir) {
+    const oldCard = document.querySelector(`.player-card[data-idx="${focusedIdx}"]`);
+    oldCard?.classList.remove('focused');
+    oldCard?.querySelector('.focus-badge')?.remove();
+
+    focusedIdx = (focusedIdx + dir + players.length) % players.length;
+
+    const newCard = document.querySelector(`.player-card[data-idx="${focusedIdx}"]`);
+    newCard?.classList.add('focused');
+    if (newCard && !newCard.querySelector('.focus-badge')) {
+      const b = document.createElement('span');
+      b.className = 'focus-badge';
+      b.textContent = '▶';
+      newCard.appendChild(b);
+    }
+    newCard?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // ── Render ──
+  function renderGame() {
+    const grid = document.getElementById('players-grid');
+    grid.innerHTML = '';
+    const n = players.length;
+    const w = window.innerWidth;
+
+    let cols;
+    if (w < 480) {
+      cols = Math.min(n, 2);
+    } else if (w < 768) {
+      cols = n <= 2 ? 2 : Math.min(n, 3);
+    } else {
+      cols = n <= 4 ? n : n <= 6 ? 3 : n;
+    }
+
+    grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    // compact on desktop for 4 players; compact on mobile whenever more than 1 player
+    grid.classList.toggle('compact', (n === 4 && w >= 768) || (w < 768 && n >= 2));
+    players.forEach((p, idx) => grid.appendChild(makeCard(p, idx)));
+  }
+
+  window.addEventListener('resize', () => {
+    if (document.getElementById('game').style.display !== 'none') renderGame();
+  });
+
+  function makeCard(p, idx) {
+    const isFocused = idx === focusedIdx;
+    const card = document.createElement('div');
+    card.className = 'player-card' + (p.hp <= 0 ? ' dead' : '') + (isFocused ? ' focused' : '');
+    card.dataset.idx = idx;
+
+    const hpClass = p.hp <= 0 ? '' : p.hp <= p.maxHp * 0.25 ? 'critical' : p.hp <= p.maxHp * 0.5 ? 'low' : '';
+    const projected = Math.min(p.maxHp, Math.max(0, p.hp + p.pending));
+
+    const classBadgeHtml = p.cls
+      ? `<div class="player-class-badge" style="color:${p.clsColor}">${p.clsIcon} ${p.cls}</div>`
+      : '';
+
+    let pendingHtml = '';
+    if (p.pending !== 0) {
+      const sign = p.pending > 0 ? `+${p.pending}` : `−${Math.abs(p.pending)}`;
+      const cls  = p.pending < 0 ? 'negative' : 'positive';
+      pendingHtml = `
+        <div class="pending-row">
+          <span class="pending-label">Pending</span>
+          <span class="pending-delta ${cls}">${sign}</span>
+          <span class="pending-arrow">→</span>
+          <span class="pending-proj">${projected}</span>
+        </div>
+        <div class="action-row">
+          <button class="validate-btn">✓ Validate</button>
+          <button class="cancel-pending-btn">✗ Cancel</button>
+        </div>`;
+    }
+
+    let undoHtml = '';
+    if (p.prev !== null) {
+      const delta = p.hp - p.prev.hp;
+      const sign = delta >= 0 ? `+${delta}` : `−${Math.abs(delta)}`;
+      undoHtml = `<button class="undo-btn">↩ Undo ${sign}</button>`;
+    }
+
+    card.innerHTML = `
+      ${isFocused ? '<span class="focus-badge">▶</span>' : ''}
+      <div class="player-name">${escHtml(p.name)}</div>
+      ${classBadgeHtml}
+      <div class="health-value ${hpClass}">${p.hp}</div>
+      <div class="ctrl-row">
+        <button class="ctrl-btn btn-small minus" data-delta="-5">−5</button>
+        <button class="ctrl-btn btn-big   minus" data-delta="-1">−</button>
+        <button class="ctrl-btn btn-big   plus"  data-delta="+1">+</button>
+        <button class="ctrl-btn btn-small plus"  data-delta="+5">+5</button>
+      </div>
+      <div class="custom-row">
+        <button class="apply-minus">−</button>
+        <input class="custom-input" type="number" value="10" min="1" placeholder="#" />
+        <button class="apply-plus">+</button>
+      </div>
+      ${pendingHtml}
+      ${undoHtml}
+      <div class="history">${renderHistory(p.history)}</div>
+    `;
+
+    card.querySelectorAll('[data-delta]').forEach(btn => {
+      btn.addEventListener('click', () => addPending(idx, +btn.dataset.delta));
+    });
+
+    const customInput = card.querySelector('.custom-input');
+    card.querySelector('.apply-minus').addEventListener('click', () => {
+      addPending(idx, -(Math.max(1, +customInput.value || 1)));
+    });
+    card.querySelector('.apply-plus').addEventListener('click', () => {
+      addPending(idx, +(Math.max(1, +customInput.value || 1)));
+    });
+
+    card.querySelector('.validate-btn')?.addEventListener('click', () => validate(idx));
+    card.querySelector('.cancel-pending-btn')?.addEventListener('click', () => cancelPending(idx));
+    card.querySelector('.undo-btn')?.addEventListener('click', () => undo(idx));
+
+    card.addEventListener('click', () => {
+      if (idx !== focusedIdx) moveFocus(idx - focusedIdx);
+    });
+
+    return card;
+  }
+
+  function addPending(idx, delta) {
+    players[idx].pending += delta;
+    refreshCard(idx);
+  }
+
+  function validate(idx) {
+    const p = players[idx];
+    if (p.pending === 0) return;
+    p.prev = { hp: p.hp, history: [...p.history] };
+    const next = Math.min(p.maxHp, Math.max(0, p.hp + p.pending));
+    const actual = next - p.hp;
+    p.hp = next;
+    p.pending = 0;
+    if (actual !== 0) {
+      const label = actual < 0 ? `−${Math.abs(actual)} → ${p.hp}` : `+${actual} → ${p.hp}`;
+      p.history.unshift({ label, type: actual < 0 ? 'damage' : 'heal' });
+      if (p.history.length > 20) p.history.pop();
+    } else {
+      p.prev = null;
+    }
+    refreshCard(idx);
+  }
+
+  function cancelPending(idx) {
+    players[idx].pending = 0;
+    refreshCard(idx);
+  }
+
+  function undo(idx) {
+    const p = players[idx];
+    if (!p.prev) return;
+    p.hp = p.prev.hp;
+    p.history = p.prev.history;
+    p.prev = null;
+    refreshCard(idx);
+  }
+
+  function refreshCard(idx) {
+    const grid = document.getElementById('players-grid');
+    const old = grid.querySelector(`[data-idx="${idx}"]`);
+    const fresh = makeCard(players[idx], idx);
+    const oldCustom = old.querySelector('.custom-input');
+    if (oldCustom) fresh.querySelector('.custom-input').value = oldCustom.value;
+    grid.replaceChild(fresh, old);
+  }
+
+  function renderHistory(hist) {
+    if (!hist.length) return '<span>No changes yet</span>';
+    return hist.map(h => `<div class="hist-entry ${h.type}">${h.label}</div>`).join('');
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+</body>
+</html>
