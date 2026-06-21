@@ -76,7 +76,11 @@ Or drag `index.html` into any modern browser. Works fully offline — no externa
 
 ## Mobile
 
-The layout is fully responsive and touch-friendly. On small screens the grid adapts to 2–3 columns, buttons are sized for tap targets, and the keyboard shortcut hint is hidden. Orientation changes are handled automatically.
+The layout is fully responsive and touch-friendly. On small screens the grid adapts to 2 columns, buttons are sized for tap targets, and the keyboard shortcut hint is hidden. Orientation changes are handled automatically. The screen is kept awake via the Wake Lock API while the page is open.
+
+## Persistence
+
+The current game (names, classes, HP, pending deltas, and history) is saved to `localStorage` on every change and restored automatically on page load. Tapping **New Game** clears the saved state.
 
 ## Fonts
 
